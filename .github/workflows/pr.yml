@@ -33,3 +33,4 @@ jobs:
       run: |
         echo "The PR title validation failed."
         exit 1
+
