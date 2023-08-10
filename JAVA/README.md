@@ -4,6 +4,7 @@ It is not allowed to copy code and any commercial use (in other learning courses
 Only students of Andrii Piatakha can use these code examples. 
 Thanks for respecting hard work of the author.
 
-2019 © Andrii Piatakha
+
+2019 Â© Andrii Piatakha
 
 
