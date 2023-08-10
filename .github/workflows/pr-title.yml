@@ -1,0 +1,30 @@
+name: PR Title Change
+
+on:
+  pull_request:
+    types:
+      - edited
+
+jobs:
+  validate_pr_title:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v2
+    
+    - name: Validate PR Title
+      run: |
+        title=$(git log -1 --pretty=format:%s $GITHUB_SHA)
+        pattern="^Issue #[0-9]+: .+"
+        
+        if [[ ! $title =~ $pattern ]]; then
+          echo "PR title does not follow the pattern. Please use 'Issue #XXX: Your title.'"
+          exit 1
+        fi
+        
+    - name: Set Status Check
+      if: ${{ failure() }}
+      run: |
+        echo "The PR title validation failed."
+        exit 1
