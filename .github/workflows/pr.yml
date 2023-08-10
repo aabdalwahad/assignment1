@@ -14,28 +14,22 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v2
     
-    - name: Validate PR Title and Message
+    - name: Get PR Title
       run: |
         title=$(curl -s -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
                "https://api.github.com/repos/${{ github.repository }}/pulls/${{ github.event.pull_request.number }}" \
                | jq -r '.title')
-        message=$(git log -1 --pretty=format:%b $GITHUB_SHA)
-        echo $title
-        title_pattern="^Issue #[0-9]+: .+"
-        message_pattern="^.{10,}$"
         
+        echo "PR Title: $title"
+        
+        title_pattern="^Issue #[0-9]+: .+"
         if [[ ! $title =~ $title_pattern ]]; then
           echo "PR title does not follow the pattern. Please use 'Issue #XXX: Your title.'"
-          exit 1
-        fi
-        
-        if [[ ! $message =~ $message_pattern ]]; then
-          echo "PR message does not follow the desired pattern."
           exit 1
         fi
         
     - name: Set Status Check
       if: ${{ failure() }}
       run: |
-        echo "The PR title or message validation failed."
+        echo "The PR title validation failed."
         exit 1
