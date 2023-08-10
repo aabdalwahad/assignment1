@@ -20,7 +20,7 @@ jobs:
         message=$(git log -1 --pretty=format:%b $GITHUB_SHA)
         
         title_pattern="^Issue #[0-9]+: .+"
-        message_pattern="Your desired message pattern here"
+        message_pattern="^.{10,}$"
         
         if [[ ! $title =~ $title_pattern ]]; then
           echo "PR title does not follow the pattern. Please use 'Issue #XXX: Your title.'"
