@@ -18,7 +18,7 @@ jobs:
       run: |
         title=$(git log -1 --pretty=format:%s $GITHUB_SHA)
         message=$(git log -1 --pretty=format:%b $GITHUB_SHA)
-        
+        echo $title
         title_pattern="^Issue #[0-9]+: .+"
         message_pattern="^.{10,}$"
         
