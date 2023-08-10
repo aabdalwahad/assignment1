@@ -16,7 +16,9 @@ jobs:
     
     - name: Validate PR Title and Message
       run: |
-        title=$(git log -1 --pretty=format:%s $GITHUB_SHA)
+        title=$(curl -s -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+               "https://api.github.com/repos/${{ github.repository }}/pulls/${{ github.event.pull_request.number }}" \
+               | jq -r '.title')
         message=$(git log -1 --pretty=format:%b $GITHUB_SHA)
         echo $title
         title_pattern="^Issue #[0-9]+: .+"
