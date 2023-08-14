@@ -1,10 +1,8 @@
-name: PR Validation
+name: PR Title, Description, and Commit Messages Validation
 
 on:
   pull_request:
-    types:
-      - opened
-      - synchronize
+    types: [opened, synchronize, reopened, edited]
 
 jobs:
   validate_pr:
@@ -14,26 +12,56 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v2
     
-    - name: Validate PR Title and Message
+    - name: Get PR Title, Description, and Commits
       run: |
-        title=$(git log -1 --pretty=format:%s $GITHUB_SHA)
-        message=$(git log -1 --pretty=format:%b $GITHUB_SHA)
+        title=$(curl -s -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+               "https://api.github.com/repos/${{ github.repository }}/pulls/${{ github.event.pull_request.number }}" \
+               | jq -r '.title')
+        description=$(curl -s -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+                     "https://api.github.com/repos/${{ github.repository }}/pulls/${{ github.event.pull_request.number }}" \
+                     | jq -r '.body')
+        commits=$(curl -s -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+                 "https://api.github.com/repos/${{ github.repository }}/pulls/${{ github.event.pull_request.number }}/commits" \
+                 | jq -r '.[].commit.message')
+        
+        echo "PR Title: $title"
+        echo "PR Description: $description"
+        echo "Commits:"
+        echo "$commits"
         
         title_pattern="^Issue #[0-9]+: .+"
-        message_pattern="^.{10,}$"
+        description_min_length=30
+        commit_message_pattern="^Issue .+"
         
         if [[ ! $title =~ $title_pattern ]]; then
           echo "PR title does not follow the pattern. Please use 'Issue #XXX: Your title.'"
           exit 1
         fi
         
-        if [[ ! $message =~ $message_pattern ]]; then
-          echo "PR message does not follow the desired pattern."
+        if [[ ${#description} -lt $description_min_length ]]; then
+          echo "PR description should be at least $description_min_length characters."
+          exit 1
+        fi
+        
+        non_matching_commits=()
+        IFS=$'\n'
+        for commit in $commits; do
+          if [[ ! $commit =~ $commit_message_pattern ]]; then
+            non_matching_commits+=("$commit")
+          fi
+        done
+        unset IFS
+        
+        if [[ ${#non_matching_commits[@]} -gt 0 ]]; then
+          echo "The following commit messages do not match the pattern:"
+          for non_matching_commit in "${non_matching_commits[@]}"; do
+            echo "- $non_matching_commit"
+          done
           exit 1
         fi
         
     - name: Set Status Check
       if: ${{ failure() }}
       run: |
-        echo "The PR title or message validation failed."
+        echo "The PR title, description, or commit message validation failed."
         exit 1
