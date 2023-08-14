@@ -30,7 +30,7 @@ jobs:
         
         title_pattern="^Issue #[0-9]+: .+"
         description_min_length=30
-        commit_message_pattern="Your commit message pattern here"
+        commit_message_pattern=“^Issue w+”
         
         if [[ ! $title =~ $title_pattern ]]; then
           echo "PR title does not follow the pattern. Please use 'Issue #XXX: Your title.'"
