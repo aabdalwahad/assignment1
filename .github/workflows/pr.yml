@@ -1,4 +1,4 @@
-name: PR title and description Validation
+name: PR Title, Description, and Commit Message Validation
 
 on:
   pull_request:
@@ -12,7 +12,7 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v2
     
-    - name: Get PR Title and Description
+    - name: Get PR Title, Description, and Commits
       run: |
         title=$(curl -s -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
                "https://api.github.com/repos/${{ github.repository }}/pulls/${{ github.event.pull_request.number }}" \
@@ -20,12 +20,17 @@ jobs:
         description=$(curl -s -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
                      "https://api.github.com/repos/${{ github.repository }}/pulls/${{ github.event.pull_request.number }}" \
                      | jq -r '.body')
+        commits=$(curl -s -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+                 "https://api.github.com/repos/${{ github.repository }}/pulls/${{ github.event.pull_request.number }}/commits" \
+                 | jq -r '.[].commit.message')
         
         echo "PR Title: $title"
         echo "PR Description: $description"
+        echo "Commits: $commits"
         
         title_pattern="^Issue #[0-9]+: .+"
         description_min_length=30
+        commit_message_pattern="Your commit message pattern here"
         
         if [[ ! $title =~ $title_pattern ]]; then
           echo "PR title does not follow the pattern. Please use 'Issue #XXX: Your title.'"
@@ -37,8 +42,15 @@ jobs:
           exit 1
         fi
         
+        for commit in $commits; do
+          if [[ ! $commit =~ $commit_message_pattern ]]; then
+            echo "Commit message '$commit' does not match the desired pattern."
+            exit 1
+          fi
+        done
+        
     - name: Set Status Check
       if: ${{ failure() }}
       run: |
-        echo "The PR title or description validation failed."
+        echo "The PR title, description, or commit message validation failed."
         exit 1
