@@ -1,4 +1,4 @@
-name: PR Title, Description, and Commit Messages Validation
+name: PR Title, Description, and Commit Messages Validation 
 
 on:
   pull_request:
