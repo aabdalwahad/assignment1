@@ -42,13 +42,10 @@ jobs:
           exit 1
         fi
         
-        for commit in $commits; do
-          echo "Commit: $commit"
-          if [[ ! $commit =~ $commit_message_pattern ]]; then
-            echo "Commit message '$commit' does not match the desired pattern."
-            exit 1
-          fi
-        done
+        if [[ ! $commits =~ $commit_message_pattern ]]; then
+          echo "At least one commit message does not match the desired pattern."
+          exit 1
+        fi
         
     - name: Set Status Check
       if: ${{ failure() }}
