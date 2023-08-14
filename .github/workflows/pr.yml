@@ -1,8 +1,10 @@
-name: PR Validation
+name: PR title and description Validation
 
 on:
   pull_request:
-    types: [opened, synchronize, reopened, edited]
+    types:
+      - opened
+      - synchronize
 
 jobs:
   validate_pr:
@@ -12,23 +14,33 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v2
     
-    - name: Get PR Title
+    - name: Get PR Title and Description
       run: |
         title=$(curl -s -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
                "https://api.github.com/repos/${{ github.repository }}/pulls/${{ github.event.pull_request.number }}" \
                | jq -r '.title')
+        description=$(curl -s -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+                     "https://api.github.com/repos/${{ github.repository }}/pulls/${{ github.event.pull_request.number }}" \
+                     | jq -r '.body')
         
         echo "PR Title: $title"
+        echo "PR Description: $description"
         
         title_pattern="^Issue #[0-9]+: .+"
+        description_min_length=30
+        
         if [[ ! $title =~ $title_pattern ]]; then
           echo "PR title does not follow the pattern. Please use 'Issue #XXX: Your title.'"
+          exit 1
+        fi
+        
+        if [[ ${#description} -lt $description_min_length ]]; then
+          echo "PR description should be at least $description_min_length characters."
           exit 1
         fi
         
     - name: Set Status Check
       if: ${{ failure() }}
       run: |
-        echo "The PR title validation failed."
+        echo "The PR title or description validation failed."
         exit 1
-
