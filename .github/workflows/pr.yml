@@ -1,4 +1,4 @@
-name: PR Title, Description, and Commit Message Validation 
+name: PR Title, Description, and Commit Messages Validation
 
 on:
   pull_request:
@@ -26,11 +26,11 @@ jobs:
         
         echo "PR Title: $title"
         echo "PR Description: $description"
-        echo "PR Commits: $commits"
+        echo "Commits: $commits"
         
         title_pattern="^Issue #[0-9]+: .+"
         description_min_length=30
-        commit_message_pattern="^Issue .+"
+        commit_message_pattern="^Issue .*"
         
         if [[ ! $title =~ $title_pattern ]]; then
           echo "PR title does not follow the pattern. Please use 'Issue #XXX: Your title.'"
@@ -42,8 +42,18 @@ jobs:
           exit 1
         fi
         
-        if [[ ! $commits =~ $commit_message_pattern ]]; then
-          echo "At least one commit message does not match the desired pattern."
+        non_matching_commits=()
+        for commit in $commits; do
+          if [[ ! $commit =~ $commit_message_pattern ]]; then
+            non_matching_commits+=("$commit")
+          fi
+        done
+        
+        if [[ ${#non_matching_commits[@]} -gt 0 ]]; then
+          echo "The following commit messages do not match the pattern:"
+          for non_matching_commit in "${non_matching_commits[@]}"; do
+            echo "- $non_matching_commit"
+          done
           exit 1
         fi
         
