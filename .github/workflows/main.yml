@@ -17,7 +17,7 @@ jobs:
         github-token: ${{ secrets.GITHUB_TOKEN }}
         script: |
           const response = await octokit.actions.createWorkflowDispatch({
-            owner: 'shared-workflows', // Replace with your shared repository owner
+            owner: 'aabdalwahad', // Replace with your shared repository owner
             repo: 'shared-workflows',  // Replace with your shared repository name
             workflow_id: 'pr-validation.yml'  // Replace with the shared workflow filename
           });
