@@ -1,0 +1,51 @@
+name: Trigger and Check External Workflow
+
+on:
+  push:
+    branches:
+      - main  # Adjust to the branch you want to trigger the workflow on
+      - master
+
+jobs:
+  trigger_and_check:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Trigger External Workflow
+        uses: actions/github-script@v5
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const { data } = await github.actions.createWorkflowDispatch({
+              owner: 'aabdalwahad',  // Replace with the owner of the shared repository
+              repo: 'shared-workflows',       // Replace with the name of the shared repository
+              workflow_id: 'pr-validation.yml',  // Replace with the workflow filename in the shared repository
+            });
+            console.log('Workflow dispatched:', data);
+
+      - name: Wait for Workflow Status
+        id: wait-for-workflow
+        run: |
+          status=""
+          while [[ "$status" != "completed" ]]; do
+            sleep 30  # Adjust the polling interval as needed
+            status=$(curl -s -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+              "https://api.github.com/repos/OWNER_OF_SHARED_REPO/shared-workflows/actions/workflows/pr-validation.yml/runs/latest" \
+              | jq -r '.status')
+            echo "External Workflow Status: $status"
+          done
+        continue-on-error: true
+
+      - name: Check Workflow Conclusion
+        if: steps.wait-for-workflow.outputs.status == 'completed'
+        run: |
+          conclusion=$(curl -s -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+            "https://api.github.com/repos/OWNER_OF_SHARED_REPO/shared-workflows/actions/workflows/pr-validation.yml/runs/latest" \
+            | jq -r '.conclusion')
+          echo "External Workflow Conclusion: $conclusion"
+          if [[ "$conclusion" == "success" ]]; then
+            echo "External Workflow passed."
+          else
+            echo "External Workflow failed."
+            exit 1
+          fi
