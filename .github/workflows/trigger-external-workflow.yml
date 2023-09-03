@@ -1,48 +1,25 @@
-name: Trigger and Check External Workflow
+name: Trigger External Workflow
 
 on:
   pull_request:
     types: [opened, synchronize, reopened, edited]
-    
+
 jobs:
-  trigger_and_check:
+  trigger_external_workflow:
     runs-on: ubuntu-latest
 
     steps:
       - name: Trigger External Workflow
-        uses: actions/github-script@v5
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          script: |
-            await github.actions.createWorkflowDispatch({
-            owner: 'aabdalwahad',
-            repo: 'shared-workflows',
-            workflow_id: 'pr-validation.yml',
-            });
-
-      - name: Wait for Workflow Status
-        id: wait-for-workflow
+        env:
+          REPO_ACCESS_TOKEN: ${{ secrets.REPO_ACCESS_TOKEN }}  # Personal access token with repo scope for the shared repository
         run: |
-          status=""
-          while [[ "$status" != "completed" ]]; do
-            sleep 30  # Adjust the polling interval as needed
-            status=$(curl -s -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
-              "https://api.github.com/repos/OWNER_OF_SHARED_REPO/shared-workflows/actions/workflows/pr-validation.yml/runs/latest" \
-              | jq -r '.status')
-            echo "External Workflow Status: $status"
-          done
-        continue-on-error: true
-
-      - name: Check Workflow Conclusion
-        if: steps.wait-for-workflow.outputs.status == 'completed'
-        run: |
-          conclusion=$(curl -s -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
-            "https://api.github.com/repos/OWNER_OF_SHARED_REPO/shared-workflows/actions/workflows/pr-validation.yml/runs/latest" \
-            | jq -r '.conclusion')
-          echo "External Workflow Conclusion: $conclusion"
-          if [[ "$conclusion" == "success" ]]; then
-            echo "External Workflow passed."
-          else
-            echo "External Workflow failed."
-            exit 1
-          fi
+          curl -X POST \
+            -H "Authorization: token $REPO_ACCESS_TOKEN" \
+            -H "Accept: application/vnd.github.everest-preview+json" \
+            "https://api.github.com/repos/OWNER_OF_SHARED_REPO/shared-workflows/dispatches" \
+            -d '{
+              "event_type": "trigger-pr-validation",  # Event name defined in the shared workflow
+              "client_payload": {
+                "branch": "main"  # Replace with the branch you want to target in the shared workflow
+              }
+            }'
