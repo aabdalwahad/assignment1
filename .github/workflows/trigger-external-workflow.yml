@@ -1,11 +1,9 @@
 name: Trigger and Check External Workflow
 
 on:
-  push:
-    branches:
-      - main  # Adjust to the branch you want to trigger the workflow on
-      - master
-
+  pull_request:
+    types: [opened, synchronize, reopened, edited]
+    
 jobs:
   trigger_and_check:
     runs-on: ubuntu-latest
