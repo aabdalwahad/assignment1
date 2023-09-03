@@ -14,12 +14,11 @@ jobs:
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
-            const { data } = await github.actions.createWorkflowDispatch({
-              owner: 'aabdalwahad',  // Replace with the owner of the shared repository
-              repo: 'shared-workflows',       // Replace with the name of the shared repository
-              workflow_id: 'pr-validation.yml',  // Replace with the workflow filename in the shared repository
+            await github.actions.createWorkflowDispatch({
+            owner: 'aabdalwahad',  // Replace with the owner of the shared repository
+            repo: 'shared-workflows',       // Replace with the name of the shared repository
+            workflow_id: 'pr-validation.yml',  // Replace with the workflow filename in the shared repository
             });
-            console.log('Workflow dispatched:', data);
 
       - name: Wait for Workflow Status
         id: wait-for-workflow
