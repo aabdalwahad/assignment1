@@ -1,0 +1,20 @@
+name: Trigger Shared Workflow
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, edited]
+
+jobs:
+  trigger_shared_workflow:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Trigger Shared Workflow
+      uses: softprops/action-gh-release@v1
+      with:
+        files: ''
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        TARGET_REPO: 'aabdalwahad/shared-workflows'
+        TARGET_WORKFLOW: 'pr-validation.yml'
+        TARGET_REF: 'main'  # Replace with the branch where your shared workflow is located
