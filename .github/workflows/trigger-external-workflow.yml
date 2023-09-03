@@ -12,7 +12,7 @@ jobs:
     steps:
       - name: Trigger External Workflow
         env:
-          REPO_ACCESS_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Personal access token with repo scope for the shared repository
+          REPO_ACCESS_TOKEN: ${{ secrets.REPO_ACCESS_TOKEN }}  # Personal access token with repo scope for the shared repository
         run: |
           curl -X POST \
             -H "Authorization: token $REPO_ACCESS_TOKEN" \
