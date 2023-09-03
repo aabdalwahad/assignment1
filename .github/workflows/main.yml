@@ -1,0 +1,19 @@
+name: Trigger Shared Workflow
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, edited]
+
+jobs:
+  trigger_shared_workflow:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Trigger Shared Workflow
+      uses: octokit/request-action@v2.x
+      with:
+        route: POST /repos/aabdalwahad/shared-workflows/actions/workflows/pr-validation.yml/dispatches
+        ref: main  # Replace with the branch where your shared workflow is located
+        inputs: {}  # You can pass any additional inputs your shared workflow requires
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
