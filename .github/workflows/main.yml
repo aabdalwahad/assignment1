@@ -1,0 +1,56 @@
+name: Trigger Shared Workflow
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, edited]
+
+jobs:
+  trigger_shared_workflow:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Trigger Shared Workflow
+      run: |
+        repo_token=${{ secrets.TEST }}
+        ref=main  # Replace with the branch where your shared workflow is located
+        workflow_id=pr-validation.yml  # Replace with the workflow filename
+        
+        response=$(curl -X POST \
+          -H "Authorization: token $repo_token" \
+          -H "Accept: application/vnd.github.v3+json" \
+          -d "{\"ref\":\"$ref\",\"inputs\":{}}" \
+          "https://api.github.com/repos/aabdalwahad/shared-workflows/actions/workflows/$workflow_id/dispatches")
+        
+        workflow_id=$(echo "$response" | jq -r '.id')
+        echo "Workflow ID: $workflow_id"
+        
+        # Monitor the status of the triggered workflow
+        while true; do
+          status=$(curl -s -H "Authorization: token $repo_token" \
+            "https://api.github.com/repos/${{ github.repository }}/actions/runs/$workflow_id" \
+            | jq -r '.status')
+          
+          case $status in
+            "queued" | "in_progress")
+              echo "Workflow is $status..."
+              sleep 10  # Wait for 10 seconds before checking again
+              ;;
+            "completed")
+              conclusion=$(curl -s -H "Authorization: token $repo_token" \
+                "https://api.github.com/repos/${{ github.repository }}/actions/runs/$workflow_id" \
+                | jq -r '.conclusion')
+              
+              echo "Workflow completed with conclusion: $conclusion"
+              if [ "$conclusion" = "success" ]; then
+                echo "Workflow passed."
+              else
+                echo "Workflow failed."
+              fi
+              exit 0
+              ;;
+            *)
+              echo "Unknown status: $status"
+              exit 1
+              ;;
+          esac
+        done
