@@ -18,7 +18,7 @@ jobs:
             -H "Accept: application/vnd.github.everest-preview+json" \
             "https://api.github.com/repos/OWNER_OF_SHARED_REPO/shared-workflows/dispatches" \
             -d '{
-              "event_type": "PR Title, Description, and Commit Messages Validation",  # Event name defined in the shared workflow
+              "event_type": "trigger-pr-validation",  # Event name defined in the shared workflow
               "client_payload": {
                 "branch": "main"  # Replace with the branch you want to target in the shared workflow
               }
