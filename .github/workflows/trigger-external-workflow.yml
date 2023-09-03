@@ -15,9 +15,9 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
             await github.actions.createWorkflowDispatch({
-            owner: 'aabdalwahad',  // Replace with the owner of the shared repository
-            repo: 'shared-workflows',       // Replace with the name of the shared repository
-            workflow_id: 'pr-validation.yml',  // Replace with the workflow filename in the shared repository
+            owner: 'aabdalwahad',
+            repo: 'shared-workflows',
+            workflow_id: 'pr-validation.yml',
             });
 
       - name: Wait for Workflow Status
