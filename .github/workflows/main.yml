@@ -1,0 +1,22 @@
+name: Use Shared Workflow
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, edited]
+      
+jobs:
+  trigger_shared_workflow:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Trigger Shared Workflow
+      uses: actions/github-script@v5
+      with:
+        github-token: ${{ secrets.GITHUB_TOKEN }}
+        script: |
+          const response = await octokit.actions.createWorkflowDispatch({
+            owner: 'aabdalwahad',  # Replace with your GitHub username or organization name
+            repo: 'shared-workflows',
+            workflow_id: 'pr-validation.yml'  # Replace with the shared workflow filename
+          });
+          console.log(response);
