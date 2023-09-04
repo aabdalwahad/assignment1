@@ -50,7 +50,7 @@ jobs:
         timeout-minutes: 30
 
       - name: Check Status
-        if: failure()
+        if: steps.wait.outcome != 'success'
         run: |
           echo "The shared workflow has failed. Preventing merge..."
           exit 1
