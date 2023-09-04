@@ -36,7 +36,7 @@ jobs:
               "client_payload": {
                 "pr_number": ${{ github.event.pull_request.number }},
                 "pr_title": "'"$title"'",
-                "pr_description": "",
+                "pr_description": "'"$description"'",,
                 "pr_commits": '"$pr_commits_json"',
                 "branch": "main"
               }
