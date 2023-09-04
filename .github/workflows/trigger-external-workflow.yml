@@ -26,6 +26,7 @@ jobs:
 
           pr_commits_json=$(echo "$commits" | jq -sR .)
 
+
           curl -X POST \
             -H "Authorization: token $REPO_ACCESS_TOKEN" \
             -H "Accept: application/vnd.github.everest-preview+json" \
