@@ -1,30 +1,30 @@
-name: Trigger External Workflow and Wait
+name: Trigger External Workflow
 
 on:
-  workflow_run:
-    workflows: ["PR Title, Description, and Commit Messages Validation"]
+  pull_request:
+    types: [opened, synchronize, reopened, edited]
+  check_suite:
     types:
       - completed
 
 jobs:
-  trigger_and_wait:
+  validate_pr:
     runs-on: ubuntu-latest
 
     steps:
       - name: Trigger External Workflow
         env:
-          REPO_ACCESS_TOKEN: ${{ secrets.REPO_ACCESS_TOKEN }}
+          REPO_ACCESS_TOKEN: ${{ secrets.REPO_ACCESS_TOKEN }}  # Personal access token with repo scope for the shared repository
         run: |
-          sha="${{ github.event.workflow_run.head_sha }}"
           title=$(curl -s -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
-                 "https://api.github.com/repos/${{ github.repository }}/pulls/$sha" \
+                 "https://api.github.com/repos/${{ github.repository }}/pulls/${{ github.event.pull_request.number }}" \
                  | jq -r '.title')
           description=$(curl -s -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
-                       "https://api.github.com/repos/${{ github.repository }}/pulls/$sha" \
-                       | jq -r '.body')
+                           "https://api.github.com/repos/${{ github.repository }}/pulls/${{ github.event.pull_request.number }}" \
+                           | jq -r '.body')
           commits=$(curl -s -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
-                   "https://api.github.com/repos/${{ github.repository }}/pulls/$sha/commits" \
-                   | jq -r '[.[].commit.message] | join("\n")')
+                       "https://api.github.com/repos/${{ github.repository }}/pulls/${{ github.event.pull_request.number }}/commits" \
+                       | jq -r '[.[].commit.message] | join("\n")')
 
           pr_commits_json=$(echo "$commits" | jq -sR .)
 
@@ -36,7 +36,7 @@ jobs:
             -d '{
               "event_type": "trigger-pr-validation",
               "client_payload": {
-                "pr_number": "'"$sha"'",
+                "pr_number": ${{ github.event.pull_request.number }},
                 "pr_title": "'"$title"'",
                 "pr_description": "'"$description"'",
                 "pr_commits": '"$pr_commits_json"',
@@ -52,9 +52,10 @@ jobs:
       - name: Check Status
         run: |
           status=$(curl -s -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
-                   "https://api.github.com/repos/aabdalwahad/shared-workflows/commits/$sha/check-suites" \
+                   "https://api.github.com/repos/aabdalwahad/shared-workflows/commits/aabdalwahad-patch-5/check-suites" \
                    | jq -r '.check_suites[0].conclusion')
+          echo $status
           if [[ $status == "failure" ]]; then
             echo "The shared workflow has failed. Preventing merge..."
-            exit 1
+          exit 1
           fi
