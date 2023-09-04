@@ -54,7 +54,7 @@ jobs:
           sha="${{ github.event.workflow_run.head_sha }}"
           echo $sha
           status=$(curl -s -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
-                   "https://api.github.com/repos/aabdalwahad/shared-workflows/commits/sha/check-suites" \
+                   "https://api.github.com/repos/aabdalwahad/shared-workflows/commits/$sha/check-suites" \
                    | jq -r '.check_suites[0].conclusion')
           echo $status
           if [[ $status == "failure" ]]; then
