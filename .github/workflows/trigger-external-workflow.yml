@@ -4,7 +4,6 @@ on:
   pull_request:
     types: [opened, synchronize, reopened, edited]
 
-
 jobs:
   trigger_external_workflow:
     runs-on: ubuntu-latest
