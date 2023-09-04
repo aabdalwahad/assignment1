@@ -22,7 +22,9 @@ jobs:
                        | jq -r '.body')
           commits=$(curl -s -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
                    "https://api.github.com/repos/${{ github.repository }}/pulls/${{ github.event.pull_request.number }}/commits" \
-                   | jq -r '.[].commit.message' | jq -sR 'split("\n") | join("\\n")')
+                   | jq -r '.[].commit.message')
+
+          pr_commits_json=$(echo "$pr_commits" | jq -sR .)
 
           curl -X POST \
             -H "Authorization: token $REPO_ACCESS_TOKEN" \
@@ -35,7 +37,7 @@ jobs:
                 "pr_number": ${{ github.event.pull_request.number }},
                 "pr_title": "'"$title"'",
                 "pr_description": "",
-                "pr_commits": "'"$commits"'",
+                "pr_commits": '"$pr_commits_json"',
                 "branch": "main"
               }
             }'
