@@ -35,7 +35,7 @@ jobs:
                 "pr_number": ${{ github.event.pull_request.number }},
                 "pr_title": "'"$title"'",
                 "pr_description": "",
-                "pr_commits": "",
+                "pr_commits": "'"$commits"'",
                 "branch": "main"
               }
             }'
