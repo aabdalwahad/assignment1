@@ -1,0 +1,66 @@
+name: Trigger External Workflow
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, edited]
+  workflow_run:
+    workflows: ["PR Title, Description, and Commit Messages Validation"]
+    types:
+      - completed
+
+
+jobs:
+  validate_pr:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Trigger External Workflow
+        env:
+          REPO_ACCESS_TOKEN: ${{ secrets.REPO_ACCESS_TOKEN }}  # Personal access token with repo scope for the shared repository
+        run: |
+          title=$(curl -s -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+                 "https://api.github.com/repos/${{ github.repository }}/pulls/${{ github.event.pull_request.number }}" \
+                 | jq -r '.title')
+          description=$(curl -s -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+                           "https://api.github.com/repos/${{ github.repository }}/pulls/${{ github.event.pull_request.number }}" \
+                           | jq -r '.body')
+          commits=$(curl -s -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+                       "https://api.github.com/repos/${{ github.repository }}/pulls/${{ github.event.pull_request.number }}/commits" \
+                       | jq -r '[.[].commit.message] | join("\n")')
+
+          pr_commits_json=$(echo "$commits" | jq -sR .)
+
+          response=$(curl -X POST \
+            -H "Authorization: token $REPO_ACCESS_TOKEN" \
+            -H "Accept: application/vnd.github.everest-preview+json" \
+            -H "Content-Type: application/json" \
+            "https://api.github.com/repos/aabdalwahad/shared-workflows/dispatches" \
+            -d '{
+              "event_type": "trigger-pr-validation",
+              "client_payload": {
+                "pr_number": ${{ github.event.pull_request.number }},
+                "pr_title": "'"$title"'",
+                "pr_description": "'"$description"'",
+                "pr_commits": '"$pr_commits_json"',
+                "branch": "main"
+              }
+            }')
+          echo "Response: $response"
+          workflow_run_id=$(echo "$response" | jq -r '.workflow_run_id')
+          echo "Workflow Run ID: $workflow_run_id"
+
+      - name: Wait for Workflow Completion
+        id: wait
+        run: echo "Waiting for the shared workflow to complete"
+        timeout-minutes: 30
+
+      - name: Check Status
+        run: |
+          status=$(curl -s -H "Authorization: Bearer ${{ secrets.REPO_ACCESS_TOKEN }}" \
+                   "https://api.github.com/repos/aabdalwahad/shared-workflows/commits/1f3e483/check-suites" \
+                   | jq -r '.check_suites[0].conclusion')
+          echo $status
+          if [[ $status == "failure" ]]; then
+            echo "The shared workflow has failed. Preventing merge..."
+          exit 1
+          fi
