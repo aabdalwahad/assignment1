@@ -12,10 +12,6 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Extract Commit SHA
-        id: extract_sha
-        run: echo "sha=${{ github.event.workflow_run.head_sha }}" >> $GITHUB_SHA
-
       - name: Trigger External Workflow
         env:
           REPO_ACCESS_TOKEN: ${{ secrets.REPO_ACCESS_TOKEN }}  # Personal access token with repo scope for the shared repository
@@ -55,9 +51,8 @@ jobs:
 
       - name: Check Status
         run: |
-          sha=$GITHUB_SHA
           status=$(curl -s -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
-                   "https://api.github.com/repos/aabdalwahad/shared-workflows/commits/$GITHUB_SHA/check-suites" \
+                   "https://api.github.com/repos/aabdalwahad/shared-workflows/commits/$(git rev-parse --short "$GITHUB_SHA")/check-suites" \
                    | jq -r '.check_suites[0].conclusion')
           echo $status
           if [[ $status == "failure" ]]; then
