@@ -13,6 +13,16 @@ jobs:
         env:
           REPO_ACCESS_TOKEN: ${{ secrets.REPO_ACCESS_TOKEN }}  # Personal access token with repo scope for the shared repository
         run: |
+          title=$(curl -s -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+                 "https://api.github.com/repos/${{ github.repository }}/pulls/${{ github.event.pull_request.number }}" \
+                 | jq -r '.title')
+          description=$(curl -s -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+                       "https://api.github.com/repos/${{ github.repository }}/pulls/${{ github.event.pull_request.number }}" \
+                       | jq -r '.body')
+          commits=$(curl -s -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+                   "https://api.github.com/repos/${{ github.repository }}/pulls/${{ github.event.pull_request.number }}/commits" \
+                   | jq -r '.[].commit.message')
+
           curl -X POST \
             -H "Authorization: token $REPO_ACCESS_TOKEN" \
             -H "Accept: application/vnd.github.everest-preview+json" \
@@ -22,7 +32,9 @@ jobs:
               "event_type": "trigger-pr-validation",
               "client_payload": {
                 "pr_number": ${{ github.event.pull_request.number }},
-                "repo_name": "assignment1",
+                "pr_title": $title,
+                "pr_description": $description,
+                "pr_commits": $commits,
                 "branch": "main"
               }
             }'
