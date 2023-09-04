@@ -22,6 +22,7 @@ jobs:
               "event_type": "trigger-pr-validation",
               "client_payload": {
                 "pr_number": ${{ github.event.pull_request.number }},
+                "repo_name": "assignment1",
                 "branch": "main"
               }
             }'
