@@ -51,7 +51,7 @@ jobs:
 
       - name: Check Status
         run: |
-          status=$(curl -s -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+          status=$(curl -s -H "Authorization: Bearer ${{ secrets.REPO_ACCESS_TOKEN }}" \
                    "https://api.github.com/repos/aabdalwahad/shared-workflows/commits/${{ github.event.workflow_run.head_sha }}/check-suites" \
                    | jq -r '.check_suites[0].conclusion')
           echo $status
