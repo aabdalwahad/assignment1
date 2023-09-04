@@ -8,7 +8,7 @@ on:
       - requested
 
 jobs:
-  trigger_external_workflow:
+  validate_pr:
     runs-on: ubuntu-latest
 
     steps:
