@@ -51,7 +51,10 @@ jobs:
 
       - name: Check Status
         run: |
-          status=$(echo "${{ steps.wait.outputs.status }}")
+          status=$(curl -s -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+                   "https://api.github.com/repos/aabdalwahad/shared-workflows/commits/${{ github.event.workflow_run.head_sha }}/check-suites" \
+                   | jq -r '.check_suites[0].conclusion')
+          echo $status
           if [[ $status == "failure" ]]; then
             echo "The shared workflow has failed. Preventing merge..."
           exit 1
