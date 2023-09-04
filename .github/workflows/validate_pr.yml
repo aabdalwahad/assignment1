@@ -52,7 +52,7 @@ jobs:
       - name: Check Status
         run: |
           status=$(curl -s -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
-                   "https://api.github.com/repos/aabdalwahad/shared-workflows/commits/1f3e483/check-suites" \
+                   "https://api.github.com/repos/aabdalwahad/shared-workflows/commits/958344a1a0040216ff264736427bb53d9f8b71e2/check-suites" \
                    | jq -r '.check_suites[0].conclusion')
           echo $status
           if [[ $status == "failure" ]]; then
