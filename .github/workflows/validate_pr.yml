@@ -50,7 +50,9 @@ jobs:
         timeout-minutes: 30
 
       - name: Check Status
-        if: steps.wait.conclusion != 'success'
         run: |
-          echo "The shared workflow has failed. Preventing merge..."
+          status=$(echo "${{ steps.wait.outputs.status }}")
+          if [[ $status == "failure" ]]; then
+            echo "The shared workflow has failed. Preventing merge..."
           exit 1
+          fi
