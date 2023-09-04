@@ -14,7 +14,7 @@ jobs:
     steps:
       - name: Extract Commit SHA
         id: extract_sha
-        run: echo "::set-output name=sha::${{ github.event.workflow_run.head_sha }}"
+        run: echo "sha=${{ github.event.workflow_run.head_sha }}" >> $GITHUB_SHA
 
       - name: Trigger External Workflow
         env:
@@ -55,9 +55,9 @@ jobs:
 
       - name: Check Status
         run: |
-          sha="${{ steps.extract_sha.outputs.sha }}"
+          sha=$GITHUB_SHA
           status=$(curl -s -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
-                   "https://api.github.com/repos/aabdalwahad/shared-workflows/commits/$sha/check-suites" \
+                   "https://api.github.com/repos/aabdalwahad/shared-workflows/commits/$GITHUB_SHA/check-suites" \
                    | jq -r '.check_suites[0].conclusion')
           echo $status
           if [[ $status == "failure" ]]; then
